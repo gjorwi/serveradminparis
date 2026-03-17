@@ -9,6 +9,19 @@ const invoiceItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const invoicePaymentSchema = new mongoose.Schema(
+  {
+    fecha: { type: String, required: true },
+    metodo: { type: String, required: true, trim: true },
+    moneda: { type: String, enum: ["USD", "VES"], default: "USD" },
+    montoUsd: { type: Number, required: true, min: 0 },
+    montoVes: { type: Number, default: 0, min: 0 },
+    tasa: { type: Number, default: 0, min: 0 },
+    observacion: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
 const invoiceSchema = new mongoose.Schema(
   {
     id: { type: String, required: true },
@@ -16,6 +29,7 @@ const invoiceSchema = new mongoose.Schema(
     items: { type: [invoiceItemSchema], default: [] },
     total: { type: Number, required: true, min: 0 },
     pagado: { type: Number, default: 0, min: 0 },
+    pagos: { type: [invoicePaymentSchema], default: [] },
     status: { type: String, enum: ["pendiente", "parcial", "pagada", "cancelada"], default: "pendiente" },
   },
   { _id: false }

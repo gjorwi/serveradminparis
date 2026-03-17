@@ -10,6 +10,19 @@ const saleItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const salePaymentSchema = new mongoose.Schema(
+  {
+    fecha: { type: String, required: true },
+    metodo: { type: String, required: true, trim: true },
+    moneda: { type: String, enum: ["USD", "VES"], default: "USD" },
+    montoUsd: { type: Number, required: true, min: 0 },
+    montoVes: { type: Number, default: 0, min: 0 },
+    tasa: { type: Number, default: 0, min: 0 },
+    observacion: { type: String, default: "", trim: true },
+  },
+  { _id: false }
+);
+
 const saleSchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true },
@@ -21,6 +34,7 @@ const saleSchema = new mongoose.Schema(
     taxRate: { type: Number, default: 0, min: 0 },
     taxAmount: { type: Number, default: 0, min: 0 },
     abono: { type: Number, default: 0, min: 0 },
+    paymentDetails: { type: [salePaymentSchema], default: [] },
     total: { type: Number, required: true, min: 0 },
     items: { type: [saleItemSchema], default: [] },
   },

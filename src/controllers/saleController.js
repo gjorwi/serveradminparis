@@ -19,7 +19,19 @@ function buildSaleCode() {
 }
 
 const createSale = asyncHandler(async (req, res) => {
-  const { customerId, customerName, paymentMethod, items, saleType = "contado", abono = 0 } = req.body;
+  const {
+    customerId,
+    customerName,
+    paymentMethod,
+    paymentCurrency = "USD",
+    exchangeRate = 0,
+    paymentAmount = 0,
+    paymentAmountVes = 0,
+    paymentNote = "",
+    items,
+    saleType = "contado",
+    abono = 0,
+  } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "La venta debe incluir productos" });
@@ -62,6 +74,41 @@ const createSale = asyncHandler(async (req, res) => {
     const taxRate = Number(settings.taxRate || 0);
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount;
+    const normalizedExchangeRate = Number(exchangeRate || 0);
+    const normalizedPaymentAmount = Number(paymentAmount || 0);
+    const normalizedPaymentAmountVes = Number(paymentAmountVes || 0);
+    const normalizedAbono = Number(abono || 0);
+    const saleDate = new Date().toLocaleDateString("es-VE");
+
+    const buildPaymentDetail = (amountUsd) => ({
+      fecha: saleDate,
+      metodo: paymentMethod || "efectivo",
+      moneda: paymentCurrency === "VES" ? "VES" : "USD",
+      montoUsd: Number(amountUsd || 0),
+      montoVes:
+        paymentCurrency === "VES"
+          ? normalizedPaymentAmountVes
+          : Number(amountUsd || 0) * normalizedExchangeRate,
+      tasa: normalizedExchangeRate,
+      observacion: paymentNote || "",
+    });
+
+    let paymentDetails = [];
+    if (saleType === "contado") {
+      const paidUsd =
+        paymentCurrency === "VES"
+          ? normalizedExchangeRate > 0
+            ? normalizedPaymentAmountVes / normalizedExchangeRate
+            : 0
+          : normalizedPaymentAmount > 0
+            ? normalizedPaymentAmount
+            : total;
+      paymentDetails = [buildPaymentDetail(paidUsd || total)];
+    }
+
+    if (saleType === "mixto") {
+      paymentDetails = [buildPaymentDetail(normalizedAbono)];
+    }
 
     const sale = await Sale.create(
       [
@@ -75,7 +122,8 @@ const createSale = asyncHandler(async (req, res) => {
           taxRate,
           taxAmount,
           saleType,
-          abono,
+          abono: normalizedAbono,
+          paymentDetails,
           items: normalizedItems,
         },
       ],
@@ -88,17 +136,18 @@ const createSale = asyncHandler(async (req, res) => {
       if (customer) {
         customer.facturas.push({
           id: sale[0].code,
-          fecha: new Date().toLocaleDateString("es-VE"),
+          fecha: saleDate,
           items: normalizedItems.map((item) => ({
             nombre: item.name,
             qty: item.qty,
             precio: item.price,
           })),
           total,
-          pagado: saleType === "mixto" ? Number(abono || 0) : 0,
+          pagado: saleType === "mixto" ? normalizedAbono : 0,
+          pagos: saleType === "mixto" ? paymentDetails : [],
           status:
             saleType === "mixto"
-              ? Number(abono || 0) >= total
+              ? normalizedAbono >= total
                 ? "pagada"
                 : "parcial"
               : "pendiente",
