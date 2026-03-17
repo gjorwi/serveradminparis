@@ -9,7 +9,7 @@ const getDashboardSummary = asyncHandler(async (req, res) => {
     Sale.find().sort({ createdAt: -1 }).limit(20),
     Order.find().sort({ createdAt: -1 }).limit(20),
     Customer.find().sort({ createdAt: -1 }).limit(20),
-    Notification.find().sort({ createdAt: -1 }).limit(10),
+    Notification.find({ active: { $ne: false } }).sort({ createdAt: -1 }).limit(10),
   ]);
 
   const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);

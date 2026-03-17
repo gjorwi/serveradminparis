@@ -7,6 +7,7 @@ Copia `.env.example` a `.env` y completa:
 ```env
 PORT=4000
 CLIENT_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,https://parisadmin.vercel.app
 MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/<database>?retryWrites=true&w=majority
 JWT_SECRET=replace_with_a_strong_secret
 JWT_EXPIRES_IN=7d

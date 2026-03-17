@@ -9,6 +9,6 @@ router.get("/:id", controller.getById);
 router.post("/", controller.create);
 router.put("/:id", controller.update);
 router.patch("/:id/read", controller.markAsRead);
-router.delete("/:id", controller.remove);
+router.patch("/:id/deactivate", controller.deactivate);
 
 module.exports = router;

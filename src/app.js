@@ -18,7 +18,18 @@ const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
 
-app.use(cors({ origin: env.clientUrl, credentials: true }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || env.allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
