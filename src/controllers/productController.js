@@ -39,8 +39,35 @@ const createWithImages = asyncHandler(async (req, res) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
+  const files = req.files || [];
   const settings = (await Setting.findOne()) || { lowStockThreshold: 5 };
   const stock = Number(payload.stock || 0);
+
+  if (typeof payload.images === "string") {
+    try {
+      payload.images = JSON.parse(payload.images);
+    } catch {
+      payload.images = [];
+    }
+  }
+
+  if (!Array.isArray(payload.images)) {
+    payload.images = [];
+  }
+
+  if (files.length) {
+    const uploads = await Promise.all(
+      files.map((file) => uploadToCloudinary(file.buffer, "paris/products"))
+    );
+
+    payload.images = [
+      ...payload.images,
+      ...uploads.map((item) => ({
+        url: item.secure_url,
+        publicId: item.public_id,
+      })),
+    ];
+  }
 
   if (Object.prototype.hasOwnProperty.call(payload, "stock")) {
     payload.status = stock <= 0 ? "Agotado" : stock <= Number(settings.lowStockThreshold || 5) ? "Bajo Stock" : "Activo";
