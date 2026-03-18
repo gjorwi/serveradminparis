@@ -23,29 +23,9 @@ async function seed() {
       storeName: "Paris Boutique",
       storeEmail: env.adminEmail,
       currency: "USD",
-      taxRate: 16,
+      taxRate: 0,
       lowStockThreshold: 5,
     });
-  }
-
-  const notificationCount = await Notification.countDocuments();
-  if (!notificationCount) {
-    await Notification.insertMany([
-      {
-        title: "Stock bajo detectado",
-        message: "Hay productos por debajo del umbral mínimo de inventario.",
-        type: "warning",
-        read: false,
-        link: "/dashboard/inventario",
-      },
-      {
-        title: "Pedidos pendientes",
-        message: "Tienes pedidos sin procesar en el sistema.",
-        type: "info",
-        read: false,
-        link: "/dashboard/pedidos",
-      },
-    ]);
   }
 
   console.log("Seed completado");
